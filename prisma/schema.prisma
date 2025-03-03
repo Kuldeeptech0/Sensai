@@ -14,88 +14,92 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(uuid())
-  clerkUserId       String    @unique // clerk user Id
-  name              String?
-  imageUrl          String?
-  email             String    @unique  
-  industry          String    //combined industry-subindustry(e.g.,"tech-software-devlopment")
-  industryInsight   IndustryInsights? @relation(fields: [industry], references: [industry])
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  clerkUserId   String    @unique // clerk user id
+  email         String    @unique
+  name          String?
+  imageUrl      String?
+  industry      String?    // Combined industry-subindustry (e.g., "tech-software-development")
+  industryInsight IndustryInsight? @relation(fields: [industry], references: [industry])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Profile fields
-  bio               String?
-  experience        Int?        //years of experience
-  location          String[]    //array of skills
-
-
-  assessments       Assessment[]
-  resumes           Resume?
-  coverLetter       CoverLetter[]
+  bio           String?
+  experience    Int?      // Years of experience
+  
+  // Relations
+  skills        String[]  // Array of skills
+  assessments   Assessment[]
+  resume        Resume?
+  coverLetter   CoverLetter[]
 }
-
 
 model Assessment {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id])
-  quixScore         Float     //Overall quix score
-  questions         Json      //array of {question, answer, useranswer, isCorrect}
-  category          String    //"Techical", "Behavioral", "Other"
-  improvementTips   String?   //AI-generated tips for improvement
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  quizScore     Float     // Overall quiz score
+  questions     Json[]    // Array of {question, answer, userAnswer, isCorrect}
+  category      String    // "Technical", "Behavioral", etc.
+  improvementTip String?  // AI-generated improvement tip
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([userId])
 }
+
 model Resume {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id])
-  content           String    @db.Text    //Markdown content
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  userId      String    @unique    // One resume per user
+  user        User      @relation(fields: [userId], references: [id])
+  content     String    @db.Text // Markdown content
+  atsScore    Float?
+  feedback    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
+
 model CoverLetter {
-  id                String    @id @default(cuid())
-  userId            String    
-  user              User      @relation(fields: [userId], references: [id])
-  content           String    @db.Text  //Markdown content
-  jobDescription    String?
-  companyName       String    //Name of the company applying to
-  jobTitle          String    //Position applying for
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  content         String    // Markdown content
+  jobDescription  String?
+  companyName     String    // Name of the company applying to
+  jobTitle        String    // Position applying for
+  status          String    @default("draft") // draft, completed
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([userId])
 }
 
-model IndustryInsights{
-    id                String    @id @default(cuid())
-    industry          String    @unique //The industry this data belongs to (e.g., "Tech-software-development")
-
-  //Users in this industry
-  users             User[]
-
-  //Salary data
-  salaryRanges      Json      //Array of {role: string, min: float, max: float, median: float, location: string}
-
-  //Industry trends
-  growthRate        Float     // growth rate of the industry
-  demandLevel       DemandLevel     // "High" , "Medium", "Low"
-  topSkills         String[]  // Most in-demand skills in the industry
-
-
-  // Market Conditions
-  marketOutLook   MarketOutLook    // "Positive", "Negative", "Neutral"
-  keyTrends        String[]  // Array of current industry trends
-
-  //Learning suggestions
-  recommendedSkills  String[]  // Array of skills to learn based on industry trends
-
-  lastUpdated       DateTime  @default(now())
-  nexrtUpdate       DateTime  // Schuduled update time
+// Combined Industry Trends and Salary Insights
+model IndustryInsight {
+  id            String    @id @default(cuid())
+  industry      String    @unique  // The industry this data belongs to (e.g., "tech-software-development")
+  
+  // Users in this industry
+  users         User[]
+  
+  // Salary data
+  salaryRanges  Json[]    // Array of { role: string, min: float, max: float, median: float, location: string? }
+  
+  // Industry trends
+  growthRate    Float     // Industry growth rate
+  demandLevel   DemandLevel    // "High", "Medium", "Low"
+  topSkills     String[]  // Most in-demand skills
+  
+  // Market conditions
+  marketOutlook MarketOutlook    // "Positive", "Neutral", "Negative"
+  keyTrends     String[]  // Array of current industry trends
+  
+  // Learning suggestions
+  recommendedSkills String[]  // Skills recommended for the industry
+  
+  lastUpdated   DateTime  @default(now())
+  nextUpdate    DateTime  // Scheduled update time
 
   @@index([industry])
 }
@@ -105,10 +109,8 @@ enum DemandLevel {
   MEDIUM
   LOW
 }
-
-enum MarketOutLook {
+enum MarketOutlook {
   POSITIVE
-  NEGATIVE
   NEUTRAL
+  NEGATIVE
 }
-

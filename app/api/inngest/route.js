@@ -1,11 +1,10 @@
 import { serve } from "inngest/next";
-import { inngest } from "@/lib/inngest/client";
-import { helloWorld } from "@/lib/inngest/function";
-//Create ab Api that serves zero function
+import { helloWorld } from "@/lib/inngest/funtion";
+import { inngest } from "../../../lib/inngest/client";
 
-export const { GET, POST , PUT } =serve({
-    client: inngest,
-    functions: [
-        helloWorld,
-        ],
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: [
+    helloWorld,
+  ],
 });
