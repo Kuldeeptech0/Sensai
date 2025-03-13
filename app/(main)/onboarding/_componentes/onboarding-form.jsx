@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { onboardingSchema } from "@/app/lib/schema";
@@ -23,10 +23,22 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import  useFetch  from "@/hooks/use-fetch";
+import { updateUser } from "@/actions/user";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
 
 const OnboardingForm = ({ industries }) => {
   const [selectedIndustry, setSelectedIndustry] = useState(null);
-  const router = useRouter(); // This will help us to navigate to some other page
+  const router = useRouter();
+
+  const {
+    loading: updateLoading,
+    fn: updateUserFn,
+    data: updateResult,
+    
+  } = useFetch(updateUser);
 
   const {
     register,
@@ -38,9 +50,28 @@ const OnboardingForm = ({ industries }) => {
     resolver: zodResolver(onboardingSchema),
   });
 
-   const onSubmit =async (values) => {
-    console.log(values);
-   }
+  const onSubmit = async (values) => {
+    try {
+      const formattedIndustry = `${values.industry} ${values.subIndustry
+        .toLowerCase()
+        .replace(/ /g, "-")}`;
+
+      await updateUserFn({
+        ...values,
+        industry: formattedIndustry,
+      });
+    } catch (error) {
+      console.error("Onboarding error:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (updateResult?.success && !updateLoading) {
+      toast.success("Profile updated successfully");
+      router.push("/dashboard");
+      router.refresh();
+    }
+  }, [updateResult, updateLoading]);
 
   const watchIndustry = watch("industry");
 
@@ -78,7 +109,6 @@ const OnboardingForm = ({ industries }) => {
               {errors.industry && <p className="text-sm text-red-500">{errors.industry.message}</p>}
             </div>
 
-             {/* Sub Industry */}
             {watchIndustry && (
               <div className="space-y-2">
                 <Label htmlFor="subIndustry">Specialization</Label>
@@ -98,64 +128,61 @@ const OnboardingForm = ({ industries }) => {
                   <p className="text-sm text-red-500">{errors.subIndustry.message}</p>
                 )}
               </div>
-             )}
+            )}
 
-            {/* Experience */}
             <div className="space-y-2">
-                <Label htmlFor="experience">Year of Experience</Label>
-                <Input
-                 id="experience"
-                 type="number"
-                 min="0"
-                 max="50"
-                 placeholder="Enter your experience"
-                 {...register("experience")}
-                />
-                {errors.experience && (
-                  <p className="text-sm text-red-500">
-                    {errors.experience.message}
-                  </p>
-                )}
-              </div>
-
-          {/* Skills  */}
-          <div className="space-y-2">
-                <Label htmlFor="skills"> Skills </Label>
-                <Input
-                 id="experience"
-                 placeholder="e.g., Python, JavaScript, React, Node.js"
-                 {...register("skills")}
-                />
-                <p className="text-sm text-muted-foreground">
-                   Separate multiple skills with commas 
+              <Label htmlFor="experience">Year of Experience</Label>
+              <Input
+                id="experience"
+                type="number"
+                min="0"
+                max="50"
+                placeholder="Enter your experience"
+                {...register("experience")}
+              />
+              {errors.experience && (
+                <p className="text-sm text-red-500">
+                  {errors.experience.message}
                 </p>
-                {errors.skills && (
-                  <p className="text-sm text-red-500">
-                    {errors.skills.message}
-                  </p>
-                )}
-              </div>
+              )}
+            </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="skills">Skills</Label>
+              <Input
+                id="experience"
+                placeholder="e.g., Python, JavaScript, React, Node.js"
+                {...register("skills")}
+              />
+              <p className="text-sm text-muted-foreground">
+                Separate multiple skills with commas
+              </p>
+              {errors.skills && (
+                <p className="text-sm text-red-500">
+                  {errors.skills.message}
+                </p>
+              )}
+            </div>
 
-              {/* Professional fields */}
-              <div className="space-y-2">
-                <Label htmlFor="bio">Professional Bio</Label>
-                <Textarea 
-                 id="bio"
-                 placeholder="Tell us about your Professional background..."
-                 className="h-32"
-                 {...register("bio")}
-                />
-                {errors.bio && (
-                  <p className="text-sm text-red-500">
-                    {errors.bio.message}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="bio">Professional Bio</Label>
+              <Textarea
+                id="bio"
+                placeholder="Tell us about your Professional background..."
+                className="h-32"
+                {...register("bio")}
+              />
+              {errors.bio && (
+                <p className="text-sm text-red-500">
+                  {errors.bio.message}
+                </p>
+              )}
+            </div>
 
-              <Button type="submit" className="w-full">
-                Complete Profile
-                </Button>
+            <Button type="submit" className="w-full" >
+              "Complete Profile"
+              </Button>
+          
           </form>
         </CardContent>
       </Card>

@@ -20,4 +20,4 @@ const OnboardingPage = async () => {
   )
 }
 
-export default OnboardingPage
+export default OnboardingPage;
