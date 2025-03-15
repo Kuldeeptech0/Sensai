@@ -1,7 +1,7 @@
 "use server";
 import { PrismaClient } from '@prisma/client'
 import { auth } from "@clerk/nextjs/server";
-
+import { generateAIInsights } from './dashboard';
 const db = new PrismaClient()
 
 export async function updateUser(data){
@@ -27,17 +27,13 @@ export async function updateUser(data){
 
                 //If industry does not exist, create it with default values - wi;; replace it with ai letter
                 if(!industryInsight){
-                    industryInsight = await tx.industryInsight.create({
-                        data:{
-                            industry: data.industry,
-                            salaryRanges: [], // Default empty array
-                            growthRate: 0, //Defaault value
-                            demandLevel: "MEDIUM", //Default  value
-                            topSkills: [], //Default empty array
-                            marketOutlook: "NEUTRAL", //Default value
-                            keyTrends:[], //Default empty array
-                            recommendedSkills: [], //Default empty array
-                            nextUpdate: new Date(Date.now()+7 * 24 *60 * 60 * 1000), // 1 week from now  
+                 const insights = await generateAIInsights(data.industry);
+                    
+                 industryInsight = await db.industryInsight.create({
+                    data:{
+                        industry: data.industry,
+                        ...insights,
+                        nextUpdate: new Date(Date.now()+7 * 24 *60 * 60 * 1000), // 1 week from now
                         },
                     });
                 }

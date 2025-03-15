@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { onboardingSchema } from "@/app/lib/schema";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -12,32 +13,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import  useFetch  from "@/hooks/use-fetch";
+import useFetch from "@/hooks/use-fetch";
+import { onboardingSchema } from "@/app/lib/schema";
 import { updateUser } from "@/actions/user";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-
 
 const OnboardingForm = ({ industries }) => {
-  const [selectedIndustry, setSelectedIndustry] = useState(null);
   const router = useRouter();
+  const [selectedIndustry, setSelectedIndustry] = useState(null);
 
   const {
     loading: updateLoading,
     fn: updateUserFn,
     data: updateResult,
-    
   } = useFetch(updateUser);
 
   const {
@@ -52,7 +52,7 @@ const OnboardingForm = ({ industries }) => {
 
   const onSubmit = async (values) => {
     try {
-      const formattedIndustry = `${values.industry} ${values.subIndustry
+      const formattedIndustry = `${values.industry}-${values.subIndustry
         .toLowerCase()
         .replace(/ /g, "-")}`;
 
@@ -67,7 +67,7 @@ const OnboardingForm = ({ industries }) => {
 
   useEffect(() => {
     if (updateResult?.success && !updateLoading) {
-      toast.success("Profile updated successfully");
+      toast.success("Profile completed successfully!");
       router.push("/dashboard");
       router.refresh();
     }
@@ -79,19 +79,24 @@ const OnboardingForm = ({ industries }) => {
     <div className="flex items-center justify-center bg-background">
       <Card className="w-full max-w-lg mt-10 mx-2">
         <CardHeader>
-          <CardTitle className="gradient-title">Complete Your Profile</CardTitle>
+          <CardTitle className="gradient-title text-4xl">
+            Complete Your Profile
+          </CardTitle>
           <CardDescription>
-            Select your industry to get personalized career insights and recommendations.
+            Select your industry to get personalized career insights and
+            recommendations.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="industry">Industry</Label>
               <Select
                 onValueChange={(value) => {
                   setValue("industry", value);
-                  setSelectedIndustry(industries.find((ind) => ind.id === value));
+                  setSelectedIndustry(
+                    industries.find((ind) => ind.id === value)
+                  );
                   setValue("subIndustry", "");
                 }}
               >
@@ -99,45 +104,59 @@ const OnboardingForm = ({ industries }) => {
                   <SelectValue placeholder="Select an industry" />
                 </SelectTrigger>
                 <SelectContent>
-                  {industries.map((ind) => (
-                    <SelectItem value={ind.id} key={ind.id}>
-                      {ind.name}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    <SelectLabel>Industries</SelectLabel>
+                    {industries.map((ind) => (
+                      <SelectItem key={ind.id} value={ind.id}>
+                        {ind.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
-              {errors.industry && <p className="text-sm text-red-500">{errors.industry.message}</p>}
+              {errors.industry && (
+                <p className="text-sm text-red-500">
+                  {errors.industry.message}
+                </p>
+              )}
             </div>
 
             {watchIndustry && (
               <div className="space-y-2">
                 <Label htmlFor="subIndustry">Specialization</Label>
-                <Select onValueChange={(value) => setValue("subIndustry", value)}>
+                <Select
+                  onValueChange={(value) => setValue("subIndustry", value)}
+                >
                   <SelectTrigger id="subIndustry">
-                    <SelectValue placeholder="Select an industry" />
+                    <SelectValue placeholder="Select your specialization" />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedIndustry?.subIndustries.map((ind) => (
-                      <SelectItem value={ind} key={ind}>
-                        {ind}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectLabel>Specializations</SelectLabel>
+                      {selectedIndustry?.subIndustries.map((sub) => (
+                        <SelectItem key={sub} value={sub}>
+                          {sub}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 {errors.subIndustry && (
-                  <p className="text-sm text-red-500">{errors.subIndustry.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.subIndustry.message}
+                  </p>
                 )}
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="experience">Year of Experience</Label>
+              <Label htmlFor="experience">Years of Experience</Label>
               <Input
                 id="experience"
                 type="number"
                 min="0"
                 max="50"
-                placeholder="Enter your experience"
+                placeholder="Enter years of experience"
                 {...register("experience")}
               />
               {errors.experience && (
@@ -150,17 +169,15 @@ const OnboardingForm = ({ industries }) => {
             <div className="space-y-2">
               <Label htmlFor="skills">Skills</Label>
               <Input
-                id="experience"
-                placeholder="e.g., Python, JavaScript, React, Node.js"
+                id="skills"
+                placeholder="e.g., Python, JavaScript, Project Management"
                 {...register("skills")}
               />
               <p className="text-sm text-muted-foreground">
                 Separate multiple skills with commas
               </p>
               {errors.skills && (
-                <p className="text-sm text-red-500">
-                  {errors.skills.message}
-                </p>
+                <p className="text-sm text-red-500">{errors.skills.message}</p>
               )}
             </div>
 
@@ -168,21 +185,18 @@ const OnboardingForm = ({ industries }) => {
               <Label htmlFor="bio">Professional Bio</Label>
               <Textarea
                 id="bio"
-                placeholder="Tell us about your Professional background..."
+                placeholder="Tell us about your professional background..."
                 className="h-32"
                 {...register("bio")}
               />
               {errors.bio && (
-                <p className="text-sm text-red-500">
-                  {errors.bio.message}
-                </p>
+                <p className="text-sm text-red-500">{errors.bio.message}</p>
               )}
             </div>
 
             <Button type="submit" className="w-full" >
-              "Complete Profile"
-              </Button>
-          
+              Complete Profile
+            </Button>
           </form>
         </CardContent>
       </Card>
