@@ -2,7 +2,7 @@ import React from 'react'
 import { getUserOnboardingStatus } from '@/actions/user'
 import { redirect } from 'next/navigation'
 import { getIndustryInsights } from "@/actions/dashboard";
-import DashboardView from './_componentes/dashboard-view';
+import DashboardView from './_components/dashboard-view';
 
 
 
